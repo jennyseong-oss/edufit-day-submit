@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>에듀핏 데이</title>
+<title>에듀핏 데이 · 관리자</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -70,8 +70,16 @@ header {
   background: var(--blue);
   display: flex; align-items: center; justify-content: center;
 }
-header h1 { font-size: 16.5px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; }
+header h1 { font-size: 16.5px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px; }
+.header-tag {
+  font-size: 11px; font-weight: 700; color: var(--blue); background: var(--blue-soft);
+  padding: 3px 8px; border-radius: 20px; letter-spacing: 0.02em;
+}
 .header-sub { font-size: 13px; color: var(--text-4); }
+.header-right { display: flex; align-items: center; gap: 14px; }
+.header-approve-btn { padding: 7px 14px; font-size: 13.5px; }
+body.entry-mode .header-approve-btn { display: none; }
+@media (max-width: 560px) { .header-approve-btn .approve-btn-label { display: none; } .header-approve-btn { padding: 8px 10px; } }
 
 /* ── 레이아웃 ── */
 .main { max-width: 880px; margin: 0 auto; padding: 28px 20px 100px; }
@@ -366,6 +374,8 @@ body.entry-mode #listCard .batch-form,
 body.entry-mode #listCard .entry-list,
 body.entry-mode #listCard .admin-only,
 body.entry-mode .action-dock, body.entry-mode footer.note { display: none; }
+body.entry-mode .seg-sub,
+body.entry-mode .field-hint.code { display: none; }
 
 footer.note { font-size: 12.5px; color: var(--text-4); line-height: 1.7; padding: 4px 6px; }
 footer.note b { color: var(--text-3); }
@@ -403,6 +413,28 @@ footer.note b { color: var(--text-3); }
 .approve-btn.no:hover { opacity: .8; }
 .approve-loading { padding: 40px; text-align: center; color: var(--text-4); font-size: 13.5px; }
 .approve-scrim[hidden], .approve-modal[hidden] { display: none !important; }
+
+/* ── 입력모드 PIN 모달 ── */
+.pin-scrim { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 500; }
+.pin-modal {
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 90vw; max-width: 360px;
+  background: var(--surface); border-radius: var(--r-xl);
+  box-shadow: var(--shadow-lg); z-index: 501; overflow: hidden;
+}
+.pin-modal-head { padding: 20px 22px 4px; }
+.pin-modal-head h3 { font-size: 16px; font-weight: 700; color: var(--text); }
+.pin-modal-body { padding: 10px 22px 4px; }
+.pin-desc { font-size: 13px; color: var(--text-3); line-height: 1.6; margin-bottom: 14px; }
+.pin-input {
+  width: 100%; font-family: 'DM Mono', monospace; font-size: 17px; letter-spacing: 0.1em;
+  padding: 11px 13px; border: 1px solid var(--border); border-radius: var(--r-sm);
+  background: var(--surface-2); color: var(--text);
+}
+.pin-input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,122,255,.12); }
+.pin-modal-actions { display: flex; gap: 10px; padding: 18px 22px 22px; }
+.pin-modal-actions .btn-secondary, .pin-modal-actions .btn-primary { flex: 1; justify-content: center; }
+.pin-scrim[hidden], .pin-modal[hidden] { display: none !important; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
 </style>
 </head>
@@ -416,9 +448,14 @@ footer.note b { color: var(--text-3); }
         <path d="M5 5.4h6M5 8h6M5 10.6h3.6" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/>
       </svg>
     </div>
-    <h1>에듀핏 데이</h1>
+    <h1>에듀핏 데이 <span class="header-tag">관리자</span></h1>
   </div>
-  <span class="header-sub">신고서 HWPX · 배움누리터 근태업로드 생성</span>
+  <div class="header-right">
+    <span class="header-sub">신고서 HWPX · 배움누리터 근태업로드 생성</span>
+    <button class="btn-secondary header-approve-btn" id="headerApproveBtn" onclick="openApprovalModal()">
+      <span class="approve-btn-label">승인 대기함</span> <span class="count-badge" id="pendingBadge" style="display:none"></span>
+    </button>
+  </div>
 </header>
 
 <div class="main">
@@ -438,7 +475,7 @@ footer.note b { color: var(--text-3); }
     </div>
 
     <div class="card-section">
-      <div class="section-title">구분 · 위반일자</div>
+      <div class="section-title">구분 · 해당일자</div>
       <div class="two-col">
         <div class="field">
           <label>구분 *</label>
@@ -450,7 +487,7 @@ footer.note b { color: var(--text-3); }
           </div>
           <span class="field-hint code" id="codeNote"></span>
         </div>
-        <div class="field"><label>위반일자 *</label><input type="date" id="f-date"></div>
+        <div class="field"><label>해당일자 *</label><input type="date" id="f-date"></div>
       </div>
     </div>
 
@@ -539,7 +576,6 @@ footer.note b { color: var(--text-3); }
           입력 모드
         </button>
         <div class="admin-only" style="display:flex;gap:8px;align-items:center">
-          <button class="btn-secondary" onclick="openApprovalModal()">승인 대기함 <span class="count-badge" id="pendingBadge" style="display:none"></span></button>
           <button class="btn-secondary" onclick="exportBackup()">백업 내보내기</button>
           <button class="btn-secondary" onclick="document.getElementById('importFile').click()">불러오기</button>
           <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importBackup(event)">
@@ -571,7 +607,7 @@ footer.note b { color: var(--text-3); }
   </div>
 
   <footer class="note">
-    이 목록은 <b>이 노트북의 이 브라우저</b>에 자동 저장됩니다. 창을 닫거나 새로고침해도 유지되지만, 다른 기기와는 공유되지 않으니 다른 컴퓨터에서 이어서 쓰려면 「백업 내보내기」 파일을 옮겨 「불러오기」 해주세요.
+    이 목록은 <b>이 기기의 이 브라우저</b>에 자동 저장됩니다. 창을 닫거나 새로고침해도 유지되지만, 다른 기기(다른 컴퓨터·휴대전화)와는 공유되지 않으니 이어서 쓰려면 「백업 내보내기」 파일을 옮겨 「불러오기」 해주세요.
   </footer>
 </div>
 
@@ -585,6 +621,19 @@ footer.note b { color: var(--text-3); }
   </div>
   <div class="approve-body" id="approveBody">
     <div class="approve-loading">불러오는 중...</div>
+  </div>
+</div>
+
+<div class="pin-scrim" id="pinScrim" hidden onclick="closePinModal()"></div>
+<div class="pin-modal" id="pinModal" hidden role="dialog" aria-modal="true">
+  <div class="pin-modal-head"><h3 id="pinTitle"></h3></div>
+  <div class="pin-modal-body">
+    <p class="pin-desc" id="pinDesc"></p>
+    <input type="password" inputmode="numeric" id="pinInput" class="pin-input" onkeydown="if(event.key==='Enter') confirmPin()">
+  </div>
+  <div class="pin-modal-actions">
+    <button class="btn-secondary" onclick="closePinModal()">취소</button>
+    <button class="btn-primary" onclick="confirmPin()">확인</button>
   </div>
 </div>
 
@@ -843,7 +892,7 @@ function addEntry(){
     sign: signInk ? $('signCanvas').toDataURL('image/png') : null
   };
   e.batchId = assignBatch(e.date);
-  if(!e.name||!e.id||!e.date){toast('성명·아이디·위반일자는 필수입니다');return;}
+  if(!e.name||!e.id||!e.date){toast('성명·아이디·해당일자는 필수입니다');return;}
   entries.push(e); saveEntries(); render(); toast(`${e.name} · ${e.type} 추가됨${e.sign?' (서명 포함)':''}`);
   $('f-name').value='';$('f-id').value='';tcStart.reset();tcEnd.reset();
   $('f-h').value=0;$('f-m').value=0;$('f-reason').value='';$('f-memo').value='';
@@ -1039,9 +1088,32 @@ function initSignPad(){
 function clearPad(){signCtx.clearRect(0,0,600,200);signInk=false;$('signHint').style.display='flex';}
 
 // ---------- 입력 모드 (다른 사람 기록 숨김) ----------
-function toggleEntryMode(){
+let pinResolve=null;
+function openPinModal({title, desc, placeholder}){
+  return new Promise(resolve=>{
+    pinResolve=resolve;
+    $('pinTitle').textContent=title;
+    $('pinDesc').textContent=desc;
+    $('pinInput').value='';
+    $('pinInput').placeholder=placeholder||'';
+    $('pinScrim').hidden=false; $('pinModal').hidden=false;
+    setTimeout(()=>$('pinInput').focus(),50);
+  });
+}
+function closePinModal(result){
+  $('pinScrim').hidden=true; $('pinModal').hidden=true;
+  if(pinResolve){ const r=pinResolve; pinResolve=null; r(result===undefined?null:result); }
+}
+function confirmPin(){ closePinModal($('pinInput').value); }
+
+async function toggleEntryMode(){
   if(!document.body.classList.contains('entry-mode')){
-    const pin=prompt('입력 모드로 전환하면 신고 목록이 숨겨집니다.\n해제할 때 사용할 숫자 비밀번호를 정해주세요.\n(취소하거나 비워두면 비밀번호 없이 전환됩니다)');
+    const pin=await openPinModal({
+      title:'입력 모드로 전환',
+      desc:'전환하면 신고 목록·승인함 등 다른 사람 정보가 숨겨집니다. 해제할 때 쓸 숫자 비밀번호를 정해주세요. (비워두면 비밀번호 없이 전환됩니다)',
+      placeholder:'예: 1234 (선택 입력)'
+    });
+    if(pin===null) return;
     sessionStorage.setItem('edufit_day_pin', pin||'');
     sessionStorage.setItem('edufit_day_mode','1');
     document.body.classList.add('entry-mode');
@@ -1049,7 +1121,7 @@ function toggleEntryMode(){
   }else{
     const pin=sessionStorage.getItem('edufit_day_pin')||'';
     if(pin){
-      const t=prompt('입력 모드를 해제하려면 비밀번호를 입력하세요');
+      const t=await openPinModal({title:'입력 모드 해제', desc:'입력 모드를 해제하려면 비밀번호를 입력하세요.', placeholder:'비밀번호'});
       if(t===null) return;
       if(t!==pin){toast('비밀번호가 일치하지 않습니다');return;}
     }
