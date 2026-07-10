@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>에듀핏 데이 · 제출</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --blue:      #007AFF;
+  --blue-soft: #EBF4FF;
+  --blue-mid:  #B8D9FF;
+  --green:     #34C759;
+  --green-soft:#EDFAF1;
+  --green-mid: #A3E0B4;
+  --red:       #FF3B30;
+  --red-soft:  #FFF0EF;
+  --orange:    #FF9500;
+  --orange-soft:#FFF5E6;
+  --bg:        #F5F5F7;
+  --surface:   #FFFFFF;
+  --surface-2: #F5F5F7;
+  --border:    #E5E5EA;
+  --text:      #1C1C1E;
+  --text-2:    #3C3C43;
+  --text-3:    #6B6B72;
+  --text-4:    #AEAEB2;
+  --r-sm:  10px;
+  --r-md:  14px;
+  --r-lg:  18px;
+  --r-xl:  22px;
+  --shadow-xs: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.10), 0 3px 8px rgba(0,0,0,0.06);
+}
+
+body {
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+header {
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 0.5px solid rgba(0,0,0,0.08);
+  padding: 0 28px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky; top: 0; z-index: 200;
+}
+.header-left { display: flex; align-items: center; gap: 10px; }
+.header-logo {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: var(--blue);
+  display: flex; align-items: center; justify-content: center;
+}
+header h1 { font-size: 16.5px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; }
+.header-sub { font-size: 13px; color: var(--text-4); }
+
+.main { max-width: 620px; margin: 0 auto; padding: 28px 20px 100px; }
+
+.card {
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+.card-section { padding: 22px 24px; }
+.card-section + .card-section { border-top: 0.5px solid var(--border); }
+.section-title { font-size: 12.5px; font-weight: 600; color: var(--text-4); letter-spacing: 0.06em; margin-bottom: 14px; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 480px) { .two-col { grid-template-columns: 1fr; } }
+
+.field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
+.field label { font-size: 12.5px; font-weight: 500; color: var(--text-4); letter-spacing: 0.03em; }
+.field input[type=text], .field input[type=date], .field textarea {
+  font-family: inherit; font-size: 15px;
+  padding: 10px 13px; border: 1px solid var(--border); border-radius: var(--r-sm);
+  color: var(--text); background: var(--surface-2);
+  transition: border-color .15s, box-shadow .15s;
+  width: 100%;
+}
+.field input[type=date] { font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 500; }
+.field textarea { resize: vertical; min-height: 58px; }
+.field input:focus, .field textarea:focus {
+  outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,122,255,.12);
+}
+
+.time-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.time-field { display: flex; flex-direction: column; gap: 4px; }
+.time-field label { font-size: 12.5px; font-weight: 500; color: var(--text-4); letter-spacing: 0.03em; }
+.time-chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 9px 14px; cursor: pointer;
+  font-family: inherit; transition: border-color .15s, box-shadow .15s, transform .1s;
+}
+.time-chip:hover { border-color: var(--blue-mid); }
+.time-chip:active { transform: scale(0.97); }
+.time-chip .chip-value { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 500; color: var(--text); }
+.time-chip.empty .chip-value { color: var(--text-4); }
+.time-sep { font-size: 20px; color: var(--text-4); margin-top: 20px; }
+.time-note { font-size: 12.5px; color: var(--text-4); margin-top: 10px; line-height: 1.5; }
+
+.wheel-scrim { position: fixed; inset: 0; background: rgba(0,0,0,.32); z-index: 400; }
+.wheel-popover {
+  position: fixed; left: 50%; bottom: 0; transform: translateX(-50%);
+  width: 100%; max-width: 420px;
+  background: var(--surface); border-radius: var(--r-xl) var(--r-xl) 0 0;
+  box-shadow: var(--shadow-lg); padding: 16px 18px calc(16px + env(safe-area-inset-bottom));
+  z-index: 401;
+}
+@media (min-width: 481px) {
+  .wheel-popover { top: 50%; bottom: auto; transform: translate(-50%, -50%); border-radius: var(--r-xl); padding: 20px 22px; }
+}
+.wheel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.wheel-title { font-size: 14.5px; font-weight: 700; color: var(--text-2); }
+.wheel-header-btns { display: flex; align-items: center; gap: 4px; }
+.wheel-clear-btn, .wheel-done-btn {
+  border: none; background: none; cursor: pointer; font-family: inherit;
+  font-size: 13.5px; font-weight: 600; padding: 6px 10px; border-radius: 8px;
+}
+.wheel-clear-btn { color: var(--text-3); }
+.wheel-clear-btn:hover { color: var(--red); background: var(--red-soft); }
+.wheel-done-btn { color: var(--blue); font-weight: 700; }
+.wheel-done-btn:hover { background: var(--blue-soft); }
+.wheel-cols { position: relative; display: flex; gap: 4px; }
+.wheel-highlight {
+  position: absolute; left: 0; right: 0; top: 36px; height: 36px;
+  border-top: 1px solid var(--blue-mid); border-bottom: 1px solid var(--blue-mid);
+  background: var(--blue-soft); opacity: .55; border-radius: 8px; pointer-events: none;
+}
+.wheel-col { flex: 1; position: relative; }
+.wheel-colon {
+  display: flex; align-items: center; justify-content: center; height: 108px;
+  font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 600;
+  color: var(--text-4); pointer-events: none;
+}
+.wheel-track {
+  height: 108px; overflow-y: auto; scroll-snap-type: y mandatory;
+  scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch;
+}
+.wheel-track::-webkit-scrollbar { display: none; }
+.wheel-track:focus { outline: none; }
+.wheel-track:focus-visible { box-shadow: inset 0 0 0 2px var(--blue-mid); border-radius: 8px; }
+.wheel-spacer { height: 36px; }
+.wheel-item { height: 36px; display: flex; align-items: center; justify-content: center; scroll-snap-align: center; font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 500; color: var(--text-3); user-select: none; cursor: pointer; }
+
+.tol-row { display: flex; gap: 10px; }
+.tol-item {
+  flex: 1; background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 14px 16px;
+}
+.tol-item.auto { border-color: var(--green-mid); background: var(--green-soft); }
+.tol-lbl { font-size: 12.5px; font-weight: 500; color: var(--text-4); margin-bottom: 8px; letter-spacing: 0.03em; }
+.tol-val-wrap { display: flex; align-items: baseline; gap: 5px; }
+.tol-val-wrap input[type=number] {
+  width: 52px; font-family: 'DM Mono', monospace; font-size: 24px; font-weight: 500;
+  padding: 0; border: none; background: transparent; color: var(--text); text-align: left;
+}
+.tol-val-wrap input[type=number]:focus { outline: none; }
+.tol-unit { font-size: 13px; color: var(--text-3); }
+.autonote { font-size: 12.5px; color: var(--green); margin-top: 10px; font-weight: 500; display: none; }
+.autonote.show { display: block; }
+
+.seg-ctrl { display: inline-flex; background: var(--border); border-radius: 11px; padding: 2px; gap: 2px; width: 100%; }
+.seg-btn {
+  flex: 1; padding: 10px 10px; border: none; border-radius: 9px; cursor: pointer;
+  font-family: inherit; font-size: 15px; font-weight: 500; color: var(--text-3);
+  background: transparent; transition: all .2s cubic-bezier(.4,0,.2,1); white-space: nowrap; letter-spacing: -0.01em;
+}
+.seg-btn.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow-sm); font-weight: 600; }
+
+.btn-add {
+  padding: 14px 16px; background: var(--blue); color: #fff;
+  border: none; border-radius: var(--r-md); font-size: 16px; font-weight: 600;
+  cursor: pointer; font-family: inherit; white-space: nowrap; transition: opacity .15s;
+  letter-spacing: -0.01em; width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-add:hover:not(:disabled) { opacity: .85; }
+.btn-add:disabled { opacity: .45; cursor: not-allowed; }
+.btn-secondary {
+  padding: 10px 18px; background: var(--surface-2); color: var(--text);
+  border: 1px solid var(--border); border-radius: var(--r-md);
+  font-size: 15px; font-weight: 500; cursor: pointer; font-family: inherit;
+  display: inline-flex; align-items: center; gap: 6px; transition: all .15s; white-space: nowrap;
+}
+.btn-secondary:hover { border-color: var(--text-3); background: var(--surface); }
+
+.toast {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+  background: rgba(28,28,30,0.92); backdrop-filter: blur(12px);
+  color: #fff; padding: 11px 22px; border-radius: 20px;
+  font-size: 14.5px; font-weight: 500; opacity: 0; pointer-events: none;
+  transition: opacity .25s, transform .25s; z-index: 300; box-shadow: var(--shadow-lg);
+  max-width: 90vw; text-align: center;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+
+.sign-canvas-wrap { position: relative; border: 1.5px dashed var(--blue-mid); border-radius: var(--r-md); background: #fff; overflow: hidden; }
+#signCanvas { display: block; width: 100%; max-width: 480px; margin: 0 auto; aspect-ratio: 3 / 1; touch-action: none; cursor: crosshair; }
+.sign-hint {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  color: var(--text-4); font-size: 13.5px; pointer-events: none; text-align: center; padding: 0 12px;
+}
+
+.done-card { padding: 44px 28px; text-align: center; }
+.done-icon { width: 56px; height: 56px; border-radius: 50%; background: var(--green-soft); display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
+.done-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+.done-sub { font-size: 14px; color: var(--text-3); line-height: 1.6; margin-bottom: 24px; }
+.done-summary { text-align: left; background: var(--surface-2); border-radius: var(--r-md); padding: 16px 18px; margin-bottom: 24px; font-size: 13.5px; color: var(--text-2); line-height: 1.9; }
+.done-summary b { color: var(--text); }
+
+.log-toggle { font-size: 13px; color: var(--blue); cursor: pointer; text-align: center; padding: 4px 0; user-select: none; }
+.log-list { display: none; margin-top: 12px; }
+.log-list.show { display: block; }
+.log-item { padding: 12px 24px; border-top: 0.5px solid var(--border); font-size: 13.5px; color: var(--text-3); display: flex; justify-content: space-between; gap: 10px; }
+.log-item b { color: var(--text); }
+.log-empty { padding: 24px; text-align: center; color: var(--text-4); font-size: 13.5px; }
+
+footer.note { font-size: 12.5px; color: var(--text-4); line-height: 1.7; padding: 4px 6px; text-align: center; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="header-logo">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="2.2" y="1.6" width="11.6" height="12.8" rx="2" stroke="#fff" stroke-width="1.4"/>
+        <path d="M5 5.4h6M5 8h6M5 10.6h3.6" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <h1>에듀핏 데이</h1>
+  </div>
+  <span class="header-sub">지각·조퇴·외출·결석 신고 제출</span>
+</header>
+
+<div class="main">
+
+  <!-- 입력 폼 -->
+  <div class="card" id="formCard">
+    <div class="card-section">
+      <div class="section-title">기본 정보</div>
+      <div class="two-col">
+        <div class="field"><label>성명 *</label><input type="text" id="f-name" placeholder="홍길동"></div>
+        <div class="field"><label>배움누리터 아이디 *</label><input type="text" id="f-id" placeholder="hong123"></div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label>연수과정</label><input type="text" id="f-course" placeholder=""></div>
+        <div class="field"><label>소속</label><input type="text" id="f-dept" placeholder="○○초등학교"></div>
+      </div>
+    </div>
+
+    <div class="card-section">
+      <div class="section-title">구분 · 해당 일자</div>
+      <div class="two-col">
+        <div class="field">
+          <label>구분 *</label>
+          <div class="seg-ctrl" id="segType">
+            <button type="button" class="seg-btn active" data-v="지각">지각</button>
+            <button type="button" class="seg-btn" data-v="조퇴">조퇴</button>
+            <button type="button" class="seg-btn" data-v="외출">외출</button>
+            <button type="button" class="seg-btn" data-v="결석">결석</button>
+          </div>
+        </div>
+        <div class="field"><label>해당 일자 *</label><input type="date" id="f-date"></div>
+      </div>
+    </div>
+
+    <div class="card-section">
+      <div class="section-title">시각 · 결강시간</div>
+      <div class="time-row">
+        <div class="time-field">
+          <label>시작시각</label>
+          <button type="button" class="time-chip empty" id="tc-start"><span class="chip-value">--:--</span></button>
+        </div>
+        <span class="time-sep">~</span>
+        <div class="time-field">
+          <label>도착(종료)시각</label>
+          <button type="button" class="time-chip empty" id="tc-end"><span class="chip-value">--:--</span></button>
+        </div>
+        <div class="tol-row" style="flex:1;min-width:230px">
+          <div class="tol-item" id="durBox">
+            <div class="tol-lbl">결강시간</div>
+            <div class="tol-val-wrap">
+              <input type="number" id="f-h" value="0" min="0" max="23"><span class="tol-unit">시간</span>
+              <input type="number" id="f-m" value="0" min="0" max="59"><span class="tol-unit">분</span>
+            </div>
+            <div class="autonote" id="autonote">시각 입력으로 자동 계산됨 · 수정 가능</div>
+          </div>
+        </div>
+      </div>
+      <div class="time-note">※ 시각을 탭하면 휠을 돌려 시(00~23)·분(00~59)을 선택할 수 있습니다. 지각은 원래 시작시각, 조퇴·외출은 자리를 비운 시각을 입력하세요.</div>
+    </div>
+
+    <div class="wheel-scrim" id="wheelScrim" hidden></div>
+    <div class="wheel-popover" id="wheelPopover" hidden role="dialog" aria-modal="true">
+      <div class="wheel-header">
+        <span class="wheel-title" id="wheelTitle"></span>
+        <div class="wheel-header-btns">
+          <button type="button" class="wheel-clear-btn" id="wheelClearBtn">비우기</button>
+          <button type="button" class="wheel-done-btn" id="wheelDoneBtn">완료</button>
+        </div>
+      </div>
+      <div class="wheel-cols">
+        <div class="wheel-highlight"></div>
+        <div class="wheel-col"><div class="wheel-track" id="wHourTrack" tabindex="0" aria-label="시"></div></div>
+        <span class="wheel-colon">:</span>
+        <div class="wheel-col"><div class="wheel-track" id="wMinTrack" tabindex="0" aria-label="분"></div></div>
+      </div>
+    </div>
+
+    <div class="card-section">
+      <div class="section-title">사유 · 비고</div>
+      <div class="two-col">
+        <div class="field"><label>사유</label><textarea id="f-reason" placeholder="예: 대중교통 지연"></textarea></div>
+        <div class="field"><label>비고</label><textarea id="f-memo" placeholder="선택 입력"></textarea></div>
+      </div>
+    </div>
+
+    <div class="card-section">
+      <div class="section-title">서명</div>
+      <div class="sign-canvas-wrap">
+        <canvas id="signCanvas" width="600" height="200"></canvas>
+        <div class="sign-hint" id="signHint">여기에 손가락이나 마우스로 서명해 주세요</div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:8px">
+        <button class="btn-secondary" onclick="clearPad()">서명 지우기</button>
+      </div>
+    </div>
+
+    <div class="card-section">
+      <button class="btn-add" id="submitBtn" onclick="submitEntry()">제출하기</button>
+    </div>
+  </div>
+
+  <!-- 제출 완료 카드 -->
+  <div class="card done-card" id="doneCard" style="display:none">
+    <div class="done-icon">
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M6 13.5l5 5L20 8" stroke="#34C759" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="done-title">제출이 완료되었습니다</div>
+    <div class="done-sub">담당자 검토 후 근태에 반영됩니다.<br>반영 여부는 별도 공지로 안내됩니다.</div>
+    <div class="done-summary" id="doneSummary"></div>
+    <button class="btn-add" onclick="resetForm()">다른 건 제출하기</button>
+  </div>
+
+  <!-- 내 제출 내역 (이 기기 기준) -->
+  <div class="card">
+    <div class="card-section" style="padding-bottom:14px">
+      <div class="log-toggle" id="logToggle" onclick="toggleLog()">내가 제출한 내역 보기 (이 기기 기준)</div>
+    </div>
+    <div id="logList" class="log-list"></div>
+  </div>
+
+  <footer class="note">※ 제출 내용은 담당자 검토 후 최종 반영됩니다. 이 페이지는 제출 전용이며, 목록은 이 기기에서 보낸 기록만 참고용으로 보여줍니다.</footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._tm);t._tm=setTimeout(()=>t.classList.remove('show'),2600);}
+
+// =====================================================================
+// 제출 서버 주소 (2단계에서 Google Apps Script 배포 후 아래 URL을 교체하세요)
+// =====================================================================
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwG7A1yTe-QPiQejOiLrJ7KpYETT0oUSEqKcs--WqDxJ_iMgQAl8H2Pw-peKegK_NJ9hg/exec';
+
+let curType = '지각';
+
+// ---------- 구분 세그먼트 ----------
+$('segType').addEventListener('click', e=>{
+  const btn=e.target.closest('.seg-btn'); if(!btn) return;
+  document.querySelectorAll('#segType .seg-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); curType=btn.dataset.v;
+});
+
+// ---------- 시간 입력: 휠 스크롤 피커 ----------
+const WHEEL_ITEM_H = 36;
+let wHourTrack, wMinTrack;
+let activeWheelCtl = null;
+let wheelInteracted = false;
+
+function buildWheelColumn(track, labels){
+  track.innerHTML='';
+  track.appendChild(Object.assign(document.createElement('div'),{className:'wheel-spacer'}));
+  const N=labels.length;
+  for(let rep=0; rep<3; rep++){
+    labels.forEach((label,i)=>{
+      const it=document.createElement('div');
+      it.className='wheel-item'; it.textContent=label; it.dataset.idx=rep*N+i;
+      track.appendChild(it);
+    });
+  }
+  track.appendChild(Object.assign(document.createElement('div'),{className:'wheel-spacer'}));
+  track.dataset.n=N;
+}
+function scrollToIndex(track, idx, smooth){ track.scrollTo({top: idx*WHEEL_ITEM_H, behavior: smooth?'smooth':'auto'}); }
+function onWheelSettle(track){
+  if(!activeWheelCtl) return;
+  const N=+track.dataset.n, idx=Math.round(track.scrollTop/WHEEL_ITEM_H);
+  const val=((idx%N)+N)%N, t=activeWheelCtl._tmp;
+  if(track===wHourTrack){ if(val!==t.h){ t.h=val; wheelInteracted=true; } }
+  else if(track===wMinTrack){ if(val!==t.m){ t.m=val; wheelInteracted=true; } }
+  if(idx<N || idx>=2*N) track.scrollTo({top:(N+val)*WHEEL_ITEM_H, behavior:'auto'});
+}
+function hidePopoverEls(){ $('wheelScrim').hidden=true; $('wheelPopover').hidden=true; }
+function commitActiveWheel(){
+  const c=activeWheelCtl; if(!c) return;
+  c.h=c._tmp.h; c.m=c._tmp.m; c.hasValue=true;
+  c.renderChip(); autoCalc();
+}
+function closeWheelPopover(){ commitActiveWheel(); activeWheelCtl=null; hidePopoverEls(); }
+function dismissWheelPopover(){ if(activeWheelCtl && wheelInteracted) commitActiveWheel(); activeWheelCtl=null; hidePopoverEls(); }
+function clearActiveWheel(){ if(activeWheelCtl) activeWheelCtl.reset(); activeWheelCtl=null; hidePopoverEls(); autoCalc(); }
+function initWheelTimeCtl(chipId, titleText){
+  const chip=$(chipId), valEl=chip.querySelector('.chip-value');
+  const ctl={
+    h:null, m:null, hasValue:false, _tmp:{h:9,m:0},
+    renderChip(){
+      if(!this.hasValue){ chip.classList.add('empty'); valEl.textContent='--:--'; return; }
+      chip.classList.remove('empty');
+      valEl.textContent=String(this.h).padStart(2,'0')+':'+String(this.m).padStart(2,'0');
+    },
+    get(){ if(!this.hasValue) return ''; return String(this.h).padStart(2,'0')+':'+String(this.m).padStart(2,'0'); },
+    set(hhmm){ if(!hhmm){ this.reset(); return; } let [h,m]=hhmm.split(':').map(Number); this.h=h; this.m=m; this.hasValue=true; this.renderChip(); },
+    reset(){ this.h=null; this.m=null; this.hasValue=false; this.renderChip(); },
+    open(){
+      activeWheelCtl=this; wheelInteracted=false;
+      this._tmp.h=this.hasValue?this.h:9; this._tmp.m=this.hasValue?this.m:0;
+      $('wheelTitle').textContent=titleText;
+      $('wheelScrim').hidden=false; $('wheelPopover').hidden=false;
+      scrollToIndex(wHourTrack, (+wHourTrack.dataset.n)+this._tmp.h, false);
+      scrollToIndex(wMinTrack, (+wMinTrack.dataset.n)+this._tmp.m, false);
+    }
+  };
+  ctl.renderChip();
+  chip.addEventListener('click',()=>ctl.open());
+  return ctl;
+}
+let tcStart, tcEnd;
+
+// ---------- 결강시간 자동 계산 ----------
+function autoCalc(){
+  const s=tcStart.get(), e=tcEnd.get();
+  if(!s||!e) return;
+  let mins=(new Date('2000-01-01T'+e)-new Date('2000-01-01T'+s))/60000;
+  if(mins<0) mins+=1440;
+  $('f-h').value=Math.floor(mins/60); $('f-m').value=mins%60;
+  $('autonote').classList.add('show'); $('durBox').classList.add('auto');
+}
+[$('f-h'),$('f-m')].forEach(el=>el.addEventListener('input',()=>{ $('autonote').classList.remove('show'); $('durBox').classList.remove('auto'); }));
+
+// ---------- 서명 패드 ----------
+let signCtx=null, signDrawing=false, signInk=false;
+function initSignPad(){
+  const cv=$('signCanvas'); signCtx=cv.getContext('2d');
+  signCtx.lineWidth=4.5; signCtx.lineCap='round'; signCtx.lineJoin='round'; signCtx.strokeStyle='#111';
+  const pos=ev=>{const r=cv.getBoundingClientRect();return[(ev.clientX-r.left)*cv.width/r.width,(ev.clientY-r.top)*cv.height/r.height];};
+  cv.addEventListener('pointerdown',ev=>{
+    signDrawing=true; cv.setPointerCapture(ev.pointerId);
+    const[x,y]=pos(ev); signCtx.beginPath(); signCtx.moveTo(x,y);
+    signCtx.lineTo(x+0.01,y); signCtx.stroke();
+    signInk=true; $('signHint').style.display='none';
+  });
+  cv.addEventListener('pointermove',ev=>{ if(!signDrawing) return; const[x,y]=pos(ev); signCtx.lineTo(x,y); signCtx.stroke(); });
+  const up=()=>{signDrawing=false;};
+  cv.addEventListener('pointerup',up); cv.addEventListener('pointercancel',up);
+}
+function clearPad(){ signCtx.clearRect(0,0,600,200); signInk=false; $('signHint').style.display='flex'; }
+
+// ---------- 이 기기의 제출 내역 (참고용, 승인 여부와 무관) ----------
+const LOG_KEY='edufit_day_my_submissions_v1';
+function loadLog(){ try{ return JSON.parse(localStorage.getItem(LOG_KEY)||'[]'); }catch(e){ return []; } }
+function saveLog(list){ try{ localStorage.setItem(LOG_KEY, JSON.stringify(list)); }catch(e){} }
+function addToLog(entry){
+  const list=loadLog();
+  list.unshift({ name:entry.name, type:entry.type, date:entry.date, submittedAt:entry.submittedAt });
+  saveLog(list.slice(0,50));
+}
+function renderLog(){
+  const list=loadLog();
+  const el=$('logList');
+  if(!list.length){ el.innerHTML='<div class="log-empty">아직 이 기기에서 보낸 제출 내역이 없습니다</div>'; return; }
+  el.innerHTML=list.map(e=>{
+    const dt=new Date(e.submittedAt);
+    const ts=`${dt.getMonth()+1}.${dt.getDate()} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+    return `<div class="log-item"><span><b>${e.type}</b> · ${e.date.replace(/-/g,'.')}</span><span>${ts} 제출</span></div>`;
+  }).join('');
+}
+function toggleLog(){
+  const el=$('logList'); const show=!el.classList.contains('show');
+  el.classList.toggle('show', show);
+  $('logToggle').textContent = show ? '제출 내역 접기' : '내가 제출한 내역 보기 (이 기기 기준)';
+  if(show) renderLog();
+}
+
+// ---------- 제출 ----------
+function validate(){
+  const name=$('f-name').value.trim(), id=$('f-id').value.trim(), date=$('f-date').value;
+  if(!name){ toast('성명을 입력해주세요'); return false; }
+  if(!id){ toast('배움누리터 아이디를 입력해주세요'); return false; }
+  if(!date){ toast('해당 일자를 선택해주세요'); return false; }
+  return true;
+}
+async function submitEntry(){
+  if(!validate()) return;
+  if(!GAS_URL || GAS_URL.indexOf('YOUR_APPS_SCRIPT_WEB_APP_URL_HERE')!==-1){
+    toast('제출 서버 주소가 아직 설정되지 않았습니다. 담당자에게 문의해주세요.');
+    return;
+  }
+  const payload={
+    subId: (crypto.randomUUID ? crypto.randomUUID() : 'sub_'+Date.now()+'_'+Math.random().toString(36).slice(2)),
+    name:$('f-name').value.trim(), id:$('f-id').value.trim(),
+    course:$('f-course').value.trim(), dept:$('f-dept').value.trim(),
+    type:curType, date:$('f-date').value,
+    start:tcStart.get(), end:tcEnd.get(),
+    h:$('f-h').value||'0', m:$('f-m').value||'0',
+    reason:$('f-reason').value.trim(), memo:$('f-memo').value.trim(),
+    sign: signInk ? $('signCanvas').toDataURL('image/png') : '',
+    status:'대기',
+    submittedAt:new Date().toISOString()
+  };
+  const btn=$('submitBtn'); btn.disabled=true; btn.textContent='제출 중...';
+  try{
+    await fetch(GAS_URL, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(payload)
+    });
+    addToLog(payload);
+    showDone(payload);
+  }catch(err){
+    console.error(err);
+    toast('제출에 실패했습니다. 네트워크 상태를 확인하고 다시 시도해주세요');
+  }finally{
+    btn.disabled=false; btn.textContent='제출하기';
+  }
+}
+function showDone(e){
+  $('formCard').style.display='none';
+  $('doneCard').style.display='block';
+  $('doneSummary').innerHTML=`
+    <div><b>${e.name}</b> (${e.id})</div>
+    <div>${e.type} · ${e.date.replace(/-/g,'.')}${e.start?` · ${e.start}~${e.end||''}`:''}</div>
+    <div>결강시간: ${e.h}시간 ${e.m}분</div>
+    ${e.reason?`<div>사유: ${e.reason}</div>`:''}
+  `;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function resetForm(){
+  $('f-name').value=''; $('f-id').value=''; $('f-course').value=''; $('f-dept').value='';
+  $('f-reason').value=''; $('f-memo').value='';
+  $('f-h').value=0; $('f-m').value=0;
+  $('autonote').classList.remove('show'); $('durBox').classList.remove('auto');
+  tcStart.reset(); tcEnd.reset(); clearPad();
+  document.querySelectorAll('#segType .seg-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('#segType .seg-btn[data-v="지각"]').classList.add('active');
+  curType='지각';
+  $('f-date').value=new Date().toISOString().slice(0,10);
+  $('doneCard').style.display='none';
+  $('formCard').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ---------- 초기화 ----------
+window.addEventListener('DOMContentLoaded',()=>{
+  wHourTrack=$('wHourTrack'); wMinTrack=$('wMinTrack');
+  buildWheelColumn(wHourTrack, Array.from({length:24},(_,i)=>String(i).padStart(2,'0')));
+  buildWheelColumn(wMinTrack, Array.from({length:60},(_,i)=>String(i).padStart(2,'0')));
+  [wHourTrack,wMinTrack].forEach(t=>{
+    t.addEventListener('scroll',()=>{ clearTimeout(t._settleT); t._settleT=setTimeout(()=>onWheelSettle(t),120); });
+    t.addEventListener('click',e=>{ const it=e.target.closest('.wheel-item'); if(it) scrollToIndex(t,+it.dataset.idx,true); });
+    t.addEventListener('keydown',e=>{
+      if(e.key==='ArrowDown'){ e.preventDefault(); t.scrollBy({top:WHEEL_ITEM_H,behavior:'smooth'}); }
+      else if(e.key==='ArrowUp'){ e.preventDefault(); t.scrollBy({top:-WHEEL_ITEM_H,behavior:'smooth'}); }
+    });
+    t.addEventListener('wheel',e=>{ e.preventDefault(); t.scrollBy({top:(e.deltaY>0?1:-1)*WHEEL_ITEM_H, behavior:'smooth'}); },{passive:false});
+  });
+  $('wheelScrim').addEventListener('click',dismissWheelPopover);
+  $('wheelDoneBtn').addEventListener('click',closeWheelPopover);
+  $('wheelClearBtn').addEventListener('click',clearActiveWheel);
+  tcStart=initWheelTimeCtl('tc-start','시작시각'); tcEnd=initWheelTimeCtl('tc-end','도착(종료)시각');
+  initSignPad();
+  $('f-date').value=new Date().toISOString().slice(0,10);
+});
+</script>
+</body>
+</html>
