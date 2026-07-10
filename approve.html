@@ -648,7 +648,12 @@ function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show')
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function hesc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function b64ToU8(b64){const bin=atob(b64);const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u;}
-function kdate(iso){ if(!iso) return ''; const[y,m,d]=iso.split('-'); return `${y}. ${+m}. ${+d}.`; }
+function kdate(iso){ if(!iso) return ''; const dpart=String(iso).slice(0,10); const[y,m,d]=dpart.split('-'); return `${y}. ${+m}. ${+d}.`; }
+function ktime(raw){ if(!raw) return ''; const m=String(raw).match(/(\d{1,2}):(\d{2})/); return m? `${m[1].padStart(2,'0')}:${m[2]}` : ''; }
+// 구글시트(Apps Script)가 날짜/시각 셀을 Date 객체로 직렬화해 "2026-07-10T07:00:00.000Z", "1899-12-30T23:00:00.000Z" 같은
+// 완전한 ISO 문자열로 보내는 경우가 있어, 저장 전에 순수 날짜/시각 문자열로 정규화한다.
+function normDate(raw){ if(!raw) return ''; return String(raw).slice(0,10); }
+function normTime(raw){ return ktime(raw); }
 function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);}
 
 // ---------- 감점구분 코드 매핑 (배움누리터 감점(근태)평정기준) ----------
@@ -939,7 +944,7 @@ function renderApprovalList(){
         <div class="approve-item-title">${esc(it['성명'])} · ${esc(it['구분'])}</div>
         <div class="approve-item-sub">
           ${esc(it['아이디'])} · ${esc(it['소속']||'')}<br>
-          ${esc(it['해당일자'])}${it['시작시각']?` · ${esc(it['시작시각'])}~${esc(it['종료시각']||'')}`:''} · 결강 ${esc(it['결강시간(시간)']||0)}시간 ${esc(it['결강시간(분)']||0)}분<br>
+          ${esc(normDate(it['해당일자']))}${it['시작시각']?` · ${esc(normTime(it['시작시각']))}~${esc(normTime(it['종료시각'])||'')}`:''} · 결강 ${esc(it['결강시간(시간)']||0)}시간 ${esc(it['결강시간(분)']||0)}분<br>
           ${it['사유']?('사유: '+esc(it['사유'])):''}
         </div>
       </div>
@@ -962,8 +967,8 @@ async function approvePending(i){
   const e={
     name: it['성명']||'', id: it['아이디']||'',
     course: it['연수과정']||'', dept: it['소속']||'',
-    type: it['구분']||'지각', date: it['해당일자']||'',
-    start: it['시작시각']||'', end: it['종료시각']||'',
+    type: it['구분']||'지각', date: normDate(it['해당일자']),
+    start: normTime(it['시작시각']), end: normTime(it['종료시각']),
     h: it['결강시간(시간)']||'0', m: it['결강시간(분)']||'0',
     reason: it['사유']||'', memo: it['비고']||'',
     sign: it['서명']||null
@@ -1023,7 +1028,7 @@ function render(){
       <div class="entry-name"><b>${hesc(e.name)}</b><span class="eid">${hesc(e.id)}</span></div>
       <span class="type-chip t-${e.type}">${e.type}</span>
       <div class="entry-meta">
-        <span class="mono">${e.date.replace(/-/g,'.')}</span> · <span class="mono">${e.h}시간 ${e.m}분</span>
+        <span class="mono">${String(e.date).slice(0,10).replace(/-/g,'.')}</span> · <span class="mono">${e.h}시간 ${e.m}분</span>
         ${e.sign?`<span style="color:#1A7A40;font-weight:600"> · ✓서명</span>`:''}
         ${b?`<span class="mono" style="color:var(--blue)">[${hesc(b.label)}]</span>`:''}
         <span class="entry-reason">${hesc(e.reason)||'사유 미입력'}</span>
@@ -1147,8 +1152,8 @@ async function downloadHwpx(i){
     const zip=new JSZip();
     const secB64=HWPX.files['Contents/section0.xml'];
     let xml=new TextDecoder().decode(b64ToU8(secB64));
-    const startStr = e.start? `  ${kdate(e.date)}   ${e.start}  ` : `  ${kdate(e.date)}      :     `;
-    const endStr   = e.end?   `  ${kdate(e.date)}   ${e.end}  `   : `  ${kdate(e.date)}      :     `;
+    const startStr = e.start? `  ${kdate(e.date)}   ${ktime(e.start)}  ` : `  ${kdate(e.date)}      :     `;
+    const endStr   = e.end?   `  ${kdate(e.date)}   ${ktime(e.end)}  `   : `  ${kdate(e.date)}      :     `;
     const today=new Date(); const rdate=`${today.getFullYear()}. ${today.getMonth()+1}. ${today.getDate()}.`;
     const circleWord = (e.type==='지각'||e.type==='조퇴'||e.type==='외출') ? e.type : null;
     const circleDataURL = circleWord ? genCircleDataURL() : null;
@@ -1199,7 +1204,7 @@ function downloadExcel(){
   const header=['성명','아이디','위반일자','감점구분','결강시간(시간)','결강시간(분)','비고'];
   const rows=scope.map(e=>[
     e.name, e.id,
-    e.date.replace(/-/g,''),          // 위반일자: YYYYMMDD 텍스트
+    String(e.date).slice(0,10).replace(/-/g,''),          // 위반일자: YYYYMMDD 텍스트
     CODE_MAP[e.type].code,            // 감점구분: 코드값 텍스트
     Number(e.h), Number(e.m),         // 결강시간: 숫자
     e.memo
