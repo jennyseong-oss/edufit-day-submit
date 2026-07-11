@@ -305,6 +305,17 @@ body.entry-mode .header-approve-btn { display: none; }
 .entry-meta .mono { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text-2); }
 .entry-reason { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12.5px; color: var(--text-4); }
 .entry-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+/* 모바일 압축 표기용: 기본(데스크톱)에서는 숨김 */
+.d-short, .t-short, .sign-warn { display: none; }
+/* 휴대전화·태블릿(터치 기기 또는 좁은 화면): 1줄 압축형 */
+@media (max-width: 900px), (pointer: coarse) {
+  .entry-item { gap: 10px; padding: 12px 16px; cursor: pointer; }
+  .entry-name { min-width: 0; }
+  .entry-meta { white-space: nowrap; overflow: hidden; }
+  .d-full, .t-full, .sign-ok, .batch-tag, .entry-reason { display: none; }
+  .d-short, .t-short { display: inline; }
+  .sign-warn { display: inline; color: #7A4A00; font-weight: 600; }
+}
 .empty-state { padding: 44px 24px; text-align: center; }
 .empty-state b { display: block; font-size: 15px; font-weight: 600; color: var(--text-2); margin-bottom: 5px; }
 .empty-state span { font-size: 13.5px; color: var(--text-4); line-height: 1.6; }
@@ -1149,13 +1160,13 @@ function render(){
     const i=entries.indexOf(e);
     const b=batches.find(bt=>bt.id===e.batchId);
     return `
-    <div class="entry-item">
+    <div class="entry-item" onclick="rowTap(event,${i})">
       <div class="entry-name"><b>${hesc(e.name)}</b><span class="eid">${hesc(e.id)}</span></div>
       <span class="type-chip t-${e.type}">${e.type}</span>
       <div class="entry-meta">
-        <span class="mono">${String(e.date).slice(0,10).replace(/-/g,'.')}</span> · <span class="mono">${e.h}시간 ${e.m}분</span>
-        ${e.sign?`<span style="color:#1A7A40;font-weight:600"> · ✓서명</span>`:''}
-        ${b?`<span class="mono" style="color:var(--blue)">[${hesc(b.label)}]</span>`:''}
+        <span class="mono d-full">${String(e.date).slice(0,10).replace(/-/g,'.')}</span><span class="mono d-short">${String(e.date).slice(5,10).replace(/-/g,'.')}</span> · <span class="mono t-full">${e.h}시간 ${e.m}분</span><span class="mono t-short">${e.h}:${String(e.m).padStart(2,'0')}</span>
+        ${e.sign?`<span class="sign-ok" style="color:#1A7A40;font-weight:600"> · ✓서명</span>`:`<span class="sign-warn"> · ⚠미서명</span>`}
+        ${b?`<span class="mono batch-tag" style="color:var(--blue)">[${hesc(b.label)}]</span>`:''}
         <span class="entry-reason">${hesc(e.reason)||'사유 미입력'}</span>
       </div>
       <div class="entry-actions">
@@ -1163,6 +1174,15 @@ function render(){
         <button class="del-btn" onclick="delEntry(${i})" title="삭제" aria-label="삭제">✕</button>
       </div>
     </div>`;}).join('');
+}
+
+// 모바일 압축형에서 행 탭 시 사유 토스트 표시
+const compactMQ = window.matchMedia('(max-width: 900px), (pointer: coarse)');
+function rowTap(ev,i){
+  if(ev.target.closest('button')) return;      // 신고서·삭제 버튼은 그대로 동작
+  if(!compactMQ.matches) return;               // 데스크톱에서는 무시
+  const e=entries[i]; if(!e) return;
+  toast(`${e.name} · ${e.reason||'사유 미입력'}`);
 }
 
 // ---------- 서명 패드 ----------
