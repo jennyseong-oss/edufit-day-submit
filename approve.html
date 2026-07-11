@@ -342,9 +342,6 @@ body.entry-mode .header-approve-btn { display: none; }
   .action-dock { flex-direction: column; align-items: stretch; gap: 10px; }
   .dock-status { text-align: center; }
   .action-dock .btn-primary { justify-content: center; }
-  .batch-form .field { min-width: 100%; flex: none; }
-  .batch-form { align-items: stretch; }
-  .batch-form .btn-secondary { flex: 1; justify-content: center; }
 }
 
 /* ── 제출 묶음(기간) 탭 ── */
@@ -376,7 +373,29 @@ body.entry-mode .header-approve-btn { display: none; }
   font-family: inherit; font-size: 14.5px; padding: 9px 12px;
   border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface); width: 100%;
 }
+.batch-form[hidden] { display: none !important; }
 .batch-form label { font-size: 11px; font-weight: 500; color: var(--text-4); display:block; margin-bottom: 5px; }
+.bf-dates, .bf-actions { display: contents; }
+.batch-form .bf-date-display {
+  font-size: 13px; padding: 9px 32px 9px 10px; text-align: center;
+  border-radius: var(--r-sm); background: var(--surface);
+}
+.batch-form .bf-date-display .date-calendar-icon { width: 15px; height: 15px; right: 10px; }
+.bf-save {
+  padding: 10px 18px; background: var(--blue); color: #fff;
+  border: 1px solid var(--blue); border-radius: var(--r-md);
+  font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit;
+  display: inline-flex; align-items: center; justify-content: center; transition: all .15s; white-space: nowrap;
+}
+.bf-save:hover { opacity: .88; }
+@media (max-width: 680px) {
+  .batch-form { display: block; }
+  .batch-form .field { min-width: 0; margin-bottom: 12px; }
+  .bf-dates { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .bf-dates .field { margin-bottom: 0; }
+  .bf-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .bf-actions .btn-secondary { justify-content: center; }
+}
 
 /* ── 고정 하단 독 ── */
 .action-dock {
@@ -658,10 +677,32 @@ footer.note b { color: var(--text-3); }
     </div>
     <div class="batch-form" id="batchForm" hidden>
       <div class="field"><label>묶음 이름 (선택)</label><input type="text" id="bf-label" placeholder="예: 7월 근태업로드"></div>
-      <div class="field"><label>시작일</label><input type="date" id="bf-start"></div>
-      <div class="field"><label>종료일</label><input type="date" id="bf-end"></div>
-      <button class="btn-secondary" onclick="saveBatch()">저장</button>
-      <button class="btn-secondary" onclick="toggleBatchForm()">취소</button>
+      <div class="bf-dates">
+        <div class="field">
+          <label>시작일</label>
+          <div class="date-field-wrap">
+            <input type="date" id="bf-start" class="date-native-input">
+            <div class="date-display bf-date-display" id="bf-start-display">
+              <span id="bf-start-text">날짜 선택</span>
+              <svg class="date-calendar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>종료일</label>
+          <div class="date-field-wrap">
+            <input type="date" id="bf-end" class="date-native-input">
+            <div class="date-display bf-date-display" id="bf-end-display">
+              <span id="bf-end-text">날짜 선택</span>
+              <svg class="date-calendar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bf-actions">
+        <button class="bf-save" onclick="saveBatch()">저장</button>
+        <button class="btn-secondary" onclick="toggleBatchForm()">취소</button>
+      </div>
     </div>
     <div class="entry-list" id="list"></div>
   </div>
@@ -864,9 +905,16 @@ function assignBatch(dateStr){
   return match ? match.id : null;
 }
 function reassignAllEntries(){ entries.forEach(e=>{ e.batchId = assignBatch(e.date); }); saveEntries(); }
+function syncBfDate(id){
+  const box=$(id+'-display'), txt=$(id+'-text'), v=$(id).value;
+  if(!v){ txt.textContent='날짜 선택'; box.classList.add('empty'); return; }
+  const[y,m,d]=v.split('-');
+  txt.textContent=`${y}. ${+m}. ${+d}.`;
+  box.classList.remove('empty');
+}
 function toggleBatchForm(){
   const f=$('batchForm'); f.hidden=!f.hidden;
-  if(!f.hidden){ $('bf-label').value=''; $('bf-start').value=''; $('bf-end').value=''; }
+  if(!f.hidden){ $('bf-label').value=''; $('bf-start').value=''; $('bf-end').value=''; syncBfDate('bf-start'); syncBfDate('bf-end'); }
 }
 function saveBatch(){
   const start=$('bf-start').value, end=$('bf-end').value;
@@ -1348,6 +1396,11 @@ window.addEventListener('DOMContentLoaded',()=>{
   syncDateDisplay();
   $('f-date').addEventListener('input',syncDateDisplay);
   $('f-date').addEventListener('change',syncDateDisplay);
+  ['bf-start','bf-end'].forEach(id=>{
+    syncBfDate(id);
+    $(id).addEventListener('input',()=>syncBfDate(id));
+    $(id).addEventListener('change',()=>syncBfDate(id));
+  });
   updateCodeNote();
   loadBatches(); loadEntries(); render();
   updatePendingBadge();
