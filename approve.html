@@ -115,6 +115,24 @@ body.entry-mode .header-approve-btn { display: none; }
   width: 100%;
 }
 .field input[type=date] { font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif; font-size: 15px; font-weight: 500; }
+.date-field-wrap { position: relative; }
+.date-native-input {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0; z-index: 2; cursor: pointer;
+}
+.date-display {
+  font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 500;
+  padding: 10px 40px 10px 13px; border: 1px solid var(--border); border-radius: var(--r-sm);
+  color: var(--text); background: var(--surface-2); width: 100%;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  position: relative;
+}
+.date-display.empty { color: var(--text-4); }
+.date-calendar-icon {
+  position: absolute; right: 13px; top: 50%; transform: translateY(-50%);
+  width: 18px; height: 18px; pointer-events: none; z-index: 1;
+  color: var(--text-4);
+}
 .field textarea { resize: vertical; min-height: 58px; }
 .field input:focus, .field select:focus, .field textarea:focus {
   outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,122,255,.12);
@@ -487,7 +505,16 @@ footer.note b { color: var(--text-3); }
           </div>
           <span class="field-hint code" id="codeNote"></span>
         </div>
-        <div class="field"><label>해당일자 *</label><input type="date" id="f-date"></div>
+        <div class="field">
+          <label>해당일자 *</label>
+          <div class="date-field-wrap">
+            <input type="date" id="f-date" class="date-native-input">
+            <div class="date-display" id="f-date-display">
+              <span id="f-date-text">--</span>
+              <svg class="date-calendar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -886,6 +913,14 @@ function importBackup(evt){
 }
 
 // ---------- 목록 ----------
+function syncDateDisplay(){
+  const box=$('f-date-display'), textEl=$('f-date-text'), v=$('f-date').value;
+  if(!v){ textEl.textContent='날짜를 선택하세요'; box.classList.add('empty'); return; }
+  const[y,m,d]=v.split('-');
+  textEl.textContent=`${y}. ${+m}. ${+d}.`;
+  box.classList.remove('empty');
+}
+
 function addEntry(){
   const e={
     name:$('f-name').value.trim(), id:$('f-id').value.trim(),
@@ -1256,6 +1291,9 @@ window.addEventListener('DOMContentLoaded',()=>{
   tcStart=initWheelTimeCtl('tc-start','시작시각'); tcEnd=initWheelTimeCtl('tc-end','도착(종료)시각');
   initSignPad();
   $('f-date').value=new Date().toISOString().slice(0,10);
+  syncDateDisplay();
+  $('f-date').addEventListener('input',syncDateDisplay);
+  $('f-date').addEventListener('change',syncDateDisplay);
   updateCodeNote();
   loadBatches(); loadEntries(); render();
   updatePendingBadge();
