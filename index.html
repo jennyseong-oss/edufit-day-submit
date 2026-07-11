@@ -542,6 +542,13 @@ function toggleLog(){
 }
 
 // ---------- 제출 ----------
+// UTC로 강제 변환하는 toISOString() 대신, 이 기기(브라우저)의 현지 시각을
+// "yyyy-MM-ddTHH:mm:ss" 텍스트로 그대로 저장한다. 타임존 표시(Z)가 없으므로
+// new Date()로 다시 읽어도 로컬 시각으로 파싱되어 화면 표시와 시트 저장값이 항상 일치한다.
+function localStamp(){
+  const d=new Date(), p=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
 function validate(){
   const name=$('f-name').value.trim(), id=$('f-id').value.trim(), date=$('f-date').value;
   if(!name){ toast('성명을 입력해주세요'); return false; }
@@ -565,7 +572,7 @@ async function submitEntry(){
     reason:$('f-reason').value.trim(), memo:$('f-memo').value.trim(),
     sign: signInk ? $('signCanvas').toDataURL('image/png') : '',
     status:'대기',
-    submittedAt:new Date().toISOString()
+    submittedAt:localStamp()
   };
   const btn=$('submitBtn'); btn.disabled=true; btn.textContent='제출 중...';
   try{
