@@ -333,7 +333,7 @@ body.entry-mode .header-approve-btn { display: none; }
 }
 .more-btn:hover { border-color: var(--blue); color: var(--blue); }
 .more-menu {
-  position: absolute; right: 0; top: calc(100% + 6px); z-index: 300;
+  position: fixed; z-index: 300;
   min-width: 160px; background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--r-md); padding: 5px;
   box-shadow: 0 8px 24px rgba(0,0,0,.12), 0 2px 6px rgba(0,0,0,.08);
@@ -1247,13 +1247,20 @@ function clearPad(){signCtx.clearRect(0,0,600,200);signInk=false;$('signHint').s
 function toggleMoreMenu(ev){
   ev.stopPropagation();
   const m=$('moreMenu');
-  m.hidden=!m.hidden;
+  if(!m.hidden){ m.hidden=true; return; }
+  const r=$('moreBtn').getBoundingClientRect();
+  m.style.top = (r.bottom+6)+'px';
+  m.style.left = 'auto';
+  m.style.right = (window.innerWidth - r.right)+'px';
+  m.hidden=false;
 }
 function closeMoreMenu(){ $('moreMenu').hidden=true; }
 document.addEventListener('click',e=>{
   const m=document.getElementById('moreMenu');
-  if(m && !m.hidden && !e.target.closest('.more-wrap')) m.hidden=true;
+  if(m && !m.hidden && !e.target.closest('.more-wrap') && !e.target.closest('#moreMenu')) m.hidden=true;
 });
+window.addEventListener('scroll',()=>{ const m=document.getElementById('moreMenu'); if(m) m.hidden=true; }, true);
+window.addEventListener('resize',()=>{ const m=document.getElementById('moreMenu'); if(m) m.hidden=true; });
 
 // ---------- 입력 모드 (다른 사람 기록 숨김) ----------
 let pinResolve=null;
