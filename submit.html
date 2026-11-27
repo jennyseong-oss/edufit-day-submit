@@ -43,6 +43,14 @@ input[type=text],input[type=date],input[type=time],input[type=number],textarea{
   width:100%;font-size:16px;padding:11px 13px;border:1px solid var(--border);border-radius:var(--r-sm);
   background:var(--surface-2);color:var(--text);-webkit-appearance:none;appearance:none;}
 textarea{resize:vertical;min-height:64px;}
+input[type=date],input[type=time]{display:block;min-height:47px;line-height:1.4;text-align:left;}
+input::-webkit-date-and-time-value{text-align:left;min-height:1.4em;}
+.tbox{position:relative;}
+.tbox .ph{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--text-4);pointer-events:none;}
+.tbox.filled .ph{display:none;}
+.tbox:not(.filled) input:not(:focus){color:transparent;}
+.tbox:not(.filled) input:not(:focus)::-webkit-datetime-edit{color:transparent;}
+.tbox input:focus + .ph{display:none;}
 input:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,122,255,.12);background:#fff;}
 input[readonly]{color:var(--text-3);}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
@@ -125,8 +133,8 @@ input[readonly]{color:var(--text-3);}
     <div class="sec" id="timeSec">
       <div class="sec-title">시각 · 결강시간</div>
       <div class="row2">
-        <div class="field"><label for="f-start" id="lb-start">원래 시작시각</label><input id="f-start" type="time"></div>
-        <div class="field"><label for="f-end" id="lb-end">도착시각</label><input id="f-end" type="time"></div>
+        <div class="field"><label for="f-start" id="lb-start">원래 시작시각</label><div class="tbox" id="tb-start"><input id="f-start" type="time"><span class="ph">눌러서 선택</span></div></div>
+        <div class="field"><label for="f-end" id="lb-end">도착시각</label><div class="tbox" id="tb-end"><input id="f-end" type="time"><span class="ph">눌러서 선택</span></div></div>
       </div>
       <div class="field">
         <label>결강시간</label>
@@ -266,8 +274,8 @@ function autoCalc(){
   $("f-h").value = Math.floor(mins / 60); $("f-m").value = mins % 60;
   $("durNote").textContent = "시각으로 자동 계산됨 · 직접 고칠 수 있어요"; $("durNote").classList.add("ok");
 }
-$("f-start").addEventListener("change", autoCalc);
-$("f-end").addEventListener("change", autoCalc);
+function syncPh(){ ["start","end"].forEach(k => $("tb-" + k).classList.toggle("filled", !!$("f-" + k).value)); }
+["f-start","f-end"].forEach(id => ["change","input","blur"].forEach(ev => $(id).addEventListener(ev, () => { syncPh(); autoCalc(); })));
 
 /* ---------- 서명 ---------- */
 let sctx, drawing = false, signInk = false;
@@ -371,6 +379,7 @@ function resetForm(){
   $("f-date").value = today(); $("f-start").value = ""; $("f-end").value = "";
   $("f-h").value = 0; $("f-m").value = 0; $("f-reason").value = ""; $("f-memo").value = "";
   $("durNote").textContent = "시각을 모두 입력하면 자동으로 계산됩니다."; $("durNote").classList.remove("ok");
+  syncPh();
   curType = "지각"; applyType(); clearSign();
 }
 $("back").addEventListener("click", () => {
