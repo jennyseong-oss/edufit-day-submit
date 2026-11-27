@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#F5F5F7">
+<title>근태 신고 · 에듀핏 데이</title>
+<style>
+:root{
+  --blue:#007AFF;--blue-soft:#EBF4FF;--blue-mid:#B8D9FF;
+  --green:#34C759;--green-soft:#EDFAF1;--red:#FF3B30;--red-soft:#FFF0EF;
+  --orange-soft:#FFF5E6;--bg:#F5F5F7;--surface:#fff;--surface-2:#F5F5F7;
+  --border:#E5E5EA;--text:#1C1C1E;--text-2:#3C3C43;--text-3:#6B6B72;--text-4:#AEAEB2;
+  --r-sm:10px;--r-md:14px;--r-xl:22px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
+  -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;font-size:15px;line-height:1.5;}
+button,input,textarea{font-family:inherit;}
+button{-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+.wrap{max-width:520px;margin:0 auto;
+  padding:max(18px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(32px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));}
+header{display:flex;align-items:center;gap:10px;margin:6px 2px 16px;}
+.logo{width:36px;height:36px;border-radius:10px;background:var(--blue);display:flex;align-items:center;justify-content:center;flex:none;}
+h1{font-size:20px;font-weight:700;letter-spacing:-0.3px;}
+.sub{font-size:13px;color:var(--text-3);}
+.chip{display:flex;align-items:center;gap:8px;padding:11px 14px;border-radius:var(--r-md);font-size:14.5px;font-weight:600;margin-bottom:14px;word-break:keep-all;}
+.chip::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;flex:none;}
+.chip.open{background:var(--green-soft);color:#1A7A40;}
+.chip.wait,.chip.closed{background:#EDEDEF;color:var(--text-3);}
+.chip.err{background:var(--red-soft);color:var(--red);}
+.card{background:var(--surface);border-radius:var(--r-xl);box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:14px;overflow:hidden;}
+.sec{padding:18px 18px;}
+.sec+.sec{border-top:.5px solid var(--border);}
+.sec-title{font-size:12px;font-weight:700;color:var(--text-4);letter-spacing:.06em;margin-bottom:12px;}
+.field{margin-bottom:13px;}
+.field:last-child{margin-bottom:0;}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--text-3);margin-bottom:5px;}
+.field label .req{color:var(--red);}
+input[type=text],input[type=date],input[type=time],input[type=number],textarea{
+  width:100%;font-size:16px;padding:11px 13px;border:1px solid var(--border);border-radius:var(--r-sm);
+  background:var(--surface-2);color:var(--text);-webkit-appearance:none;appearance:none;}
+textarea{resize:vertical;min-height:64px;}
+input:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,122,255,.12);background:#fff;}
+input[readonly]{color:var(--text-3);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.seg{display:flex;background:var(--border);border-radius:11px;padding:2px;gap:2px;}
+.seg button{flex:1;padding:9px 4px;border:none;border-radius:9px;background:transparent;font-size:15px;font-weight:500;color:var(--text-3);cursor:pointer;}
+.seg button.active{background:#fff;color:var(--text);font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);}
+.dur{display:flex;align-items:center;gap:8px;}
+.dur input{width:76px;text-align:center;font-weight:600;}
+.dur span{font-size:14px;color:var(--text-3);}
+.note{font-size:12.5px;color:var(--text-4);margin-top:7px;line-height:1.55;word-break:keep-all;}
+.note.ok{color:#1A7A40;}
+.sign-wrap{position:relative;border:1.5px dashed var(--blue-mid);border-radius:var(--r-md);background:#fff;overflow:hidden;}
+#signCanvas{display:block;width:100%;aspect-ratio:3/1;touch-action:none;cursor:crosshair;}
+.sign-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-4);font-size:14px;pointer-events:none;}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:none;border-radius:var(--r-md);padding:16px;font-size:16.5px;font-weight:700;cursor:pointer;}
+.btn:active{transform:scale(.98);}
+.btn-primary{background:var(--blue);color:#fff;}
+.btn-ghost{background:#EDEDEF;color:var(--text);}
+.btn-small{display:inline-flex;width:auto;padding:7px 12px;font-size:13px;font-weight:600;border-radius:var(--r-sm);}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.spinner{width:20px;height:20px;border:3px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.result{text-align:center;padding:30px 20px 22px;word-break:keep-all;}
+.result .icon{width:72px;height:72px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;}
+.result.ok .icon{background:var(--green-soft);color:#1A7A40;}
+.result.bad .icon{background:var(--orange-soft);color:#8A5A00;}
+.result h2{font-size:20px;margin-bottom:6px;}
+.result p{font-size:14.5px;color:var(--text-3);margin-bottom:18px;white-space:pre-line;}
+.hist-item{display:flex;align-items:center;gap:10px;padding:11px 18px;font-size:14px;}
+.hist-item+.hist-item{border-top:.5px solid var(--border);}
+.hist-item .m{flex:1;min-width:0;color:var(--text-2);}
+.hist-item .m small{display:block;color:var(--text-4);font-size:12px;}
+.st{font-size:12px;font-weight:700;border-radius:6px;padding:3px 8px;white-space:nowrap;}
+.st.pending{background:#EDEDEF;color:var(--text-3);}
+.st.approved{background:var(--green-soft);color:#1A7A40;}
+.st.rejected{background:var(--red-soft);color:var(--red);}
+.hidden{display:none !important;}
+.foot{text-align:center;font-size:12px;color:var(--text-4);margin-top:18px;line-height:1.6;word-break:keep-all;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo" aria-hidden="true">
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><rect x="2.2" y="1.6" width="11.6" height="12.8" rx="2" stroke="#fff" stroke-width="1.4"/><path d="M5 5.4h6M5 8h6M5 10.6h3.6" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/></svg>
+    </div>
+    <div>
+      <h1>근태 신고</h1>
+      <div class="sub" id="evTitle">에듀핏 데이</div>
+    </div>
+  </header>
+
+  <div class="chip wait" id="chip">연결하는 중…</div>
+
+  <form id="form" class="card" autocomplete="off" novalidate>
+    <div class="sec">
+      <div class="sec-title">기본 정보</div>
+      <div class="row2">
+        <div class="field"><label for="f-name">성명 <span class="req">*</span></label><input id="f-name" type="text" placeholder="홍길동" autocomplete="name"></div>
+        <div class="field"><label for="f-id">배움누리터 아이디 <span class="req">*</span></label><input id="f-id" type="text" placeholder="hong123" autocapitalize="off" spellcheck="false"></div>
+      </div>
+      <div class="field"><label for="f-dept">소속</label><input id="f-dept" type="text" placeholder="○○초등학교"></div>
+      <div class="field"><label for="f-course">연수과정</label><input id="f-course" type="text"></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">구분 · 날짜</div>
+      <div class="field">
+        <label>구분 <span class="req">*</span></label>
+        <div class="seg" id="segType">
+          <button type="button" class="active" data-v="지각">지각</button>
+          <button type="button" data-v="조퇴">조퇴</button>
+          <button type="button" data-v="외출">외출</button>
+          <button type="button" data-v="결석">결석</button>
+        </div>
+      </div>
+      <div class="field"><label for="f-date">해당 일자 <span class="req">*</span></label><input id="f-date" type="date"></div>
+    </div>
+
+    <div class="sec" id="timeSec">
+      <div class="sec-title">시각 · 결강시간</div>
+      <div class="row2">
+        <div class="field"><label for="f-start" id="lb-start">원래 시작시각</label><input id="f-start" type="time"></div>
+        <div class="field"><label for="f-end" id="lb-end">도착시각</label><input id="f-end" type="time"></div>
+      </div>
+      <div class="field">
+        <label>결강시간</label>
+        <div class="dur">
+          <input id="f-h" type="number" inputmode="numeric" min="0" max="23" value="0"><span>시간</span>
+          <input id="f-m" type="number" inputmode="numeric" min="0" max="59" value="0"><span>분</span>
+        </div>
+        <div class="note" id="durNote">시각을 모두 입력하면 자동으로 계산됩니다.</div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">사유</div>
+      <div class="field"><label for="f-reason">사유 <span class="req">*</span></label><textarea id="f-reason" placeholder="예: 대중교통 지연"></textarea></div>
+      <div class="field"><label for="f-memo">담당자에게 남길 말</label><textarea id="f-memo" placeholder="선택 입력"></textarea></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">서명 <span style="color:var(--red)">*</span></div>
+      <div class="sign-wrap">
+        <canvas id="signCanvas" width="600" height="200"></canvas>
+        <div class="sign-hint" id="signHint">여기에 손가락으로 서명해 주세요</div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:8px">
+        <button type="button" class="btn btn-ghost btn-small" id="signClear">서명 지우기</button>
+      </div>
+    </div>
+
+    <div class="sec">
+      <button class="btn btn-primary" id="submit" type="submit" disabled>잠시만 기다려주세요</button>
+      <p class="note">입력한 내용은 이 기기에서 암호화되어 전송되며, 담당자만 열어볼 수 있습니다.</p>
+    </div>
+  </form>
+
+  <div class="card result hidden" id="resultCard">
+    <div class="icon" id="rIcon"></div>
+    <h2 id="rTitle"></h2>
+    <p id="rMsg"></p>
+    <button class="btn btn-ghost" id="back" type="button">새 신고 작성</button>
+  </div>
+
+  <div class="card hidden" id="histCard">
+    <div class="sec" style="padding-bottom:6px"><div class="sec-title" style="margin-bottom:4px">이 기기에서 제출한 신고</div></div>
+    <div id="histList"></div>
+  </div>
+
+  <div class="foot">에듀핏 데이 · 서울특별시교육청교육연수원</div>
+</div>
+
+<script type="module">
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyA2CV6nUgmRdlBD-_Z17aWcpDBHEoTbO_U",
+  authDomain: "edufit-day.firebaseapp.com",
+  projectId: "edufit-day",
+  storageBucket: "edufit-day.firebasestorage.app",
+  messagingSenderId: "711625492646",
+  appId: "1:711625492646:web:3391abaab7e63fc1ac4c67"
+};
+const SDK = "https://www.gstatic.com/firebasejs/10.12.2/";
+const $ = (id) => document.getElementById(id);
+
+const ICON_OK = '<svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+const ICON_WARN = '<svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="7" x2="12" y2="13"/><circle cx="12" cy="17" r="0.6" fill="currentColor"/><circle cx="12" cy="12" r="10"/></svg>';
+
+const pub = (new URLSearchParams(location.search).get("e") || "").toLowerCase();
+const PROFILE_KEY = "edufit_day_submit_profile";
+const HIST_KEY = "edufit_day_submit_hist_" + pub;
+
+let fs = null, db = null, eventData = null, pubKey = null, busy = false, curType = "지각";
+
+/* ---------- 공통 ---------- */
+const b64 = (buf) => { const u = new Uint8Array(buf); let s = ""; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
+const unb64 = (str) => { const bin = atob(str); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; };
+const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
+function setChip(cls, text){ const c = $("chip"); c.className = "chip " + cls; c.textContent = text; }
+function today(){ const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+
+/* ---------- 암호화: AES-GCM(본문) + RSA-OAEP(키 포장) ---------- */
+async function encryptPayload(obj){
+  const aes = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, ["encrypt"]);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, aes, new TextEncoder().encode(JSON.stringify(obj)));
+  const raw = await crypto.subtle.exportKey("raw", aes);
+  const ek = await crypto.subtle.encrypt({ name: "RSA-OAEP" }, pubKey, raw);
+  return { ct: b64(ct), ek: b64(ek), iv: b64(iv) };
+}
+
+/* ---------- 화면 상태 ---------- */
+function renderMode(){
+  const btn = $("submit");
+  if (busy) return;
+  if (!eventData) return;
+  if (eventData.mode === "open"){
+    setChip("open", "신고 접수 중");
+    btn.disabled = false; btn.textContent = "신고서 제출";
+  } else {
+    setChip("closed", "지금은 접수하지 않아요. 담당자에게 문의해주세요.");
+    btn.disabled = true; btn.textContent = "접수가 닫혀 있어요";
+  }
+}
+function fatal(text){
+  setChip("err", text);
+  $("submit").disabled = true; $("submit").textContent = "사용할 수 없어요";
+}
+function showResult(kind, title, msg){
+  $("resultCard").className = "card result " + kind;
+  $("rIcon").innerHTML = kind === "ok" ? ICON_OK : ICON_WARN;
+  $("rTitle").textContent = title;
+  $("rMsg").textContent = msg || "";
+  $("form").classList.add("hidden");
+  window.scrollTo(0, 0);
+}
+
+/* ---------- 구분 · 시각 ---------- */
+const LABELS = {
+  "지각": ["원래 시작시각", "도착시각"],
+  "조퇴": ["나간 시각", "원래 종료시각"],
+  "외출": ["나간 시각", "돌아온 시각"],
+  "결석": ["", ""]
+};
+function applyType(){
+  document.querySelectorAll("#segType button").forEach(b => b.classList.toggle("active", b.dataset.v === curType));
+  const [a, b] = LABELS[curType];
+  $("lb-start").textContent = a; $("lb-end").textContent = b;
+  $("timeSec").classList.toggle("hidden", curType === "결석");
+}
+$("segType").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  curType = b.dataset.v; applyType();
+});
+function autoCalc(){
+  const s = $("f-start").value, e = $("f-end").value;
+  if (!s || !e) return;
+  const [sh, sm] = s.split(":").map(Number), [eh, em] = e.split(":").map(Number);
+  let mins = (eh * 60 + em) - (sh * 60 + sm);
+  if (mins < 0) mins += 1440;
+  $("f-h").value = Math.floor(mins / 60); $("f-m").value = mins % 60;
+  $("durNote").textContent = "시각으로 자동 계산됨 · 직접 고칠 수 있어요"; $("durNote").classList.add("ok");
+}
+$("f-start").addEventListener("change", autoCalc);
+$("f-end").addEventListener("change", autoCalc);
+
+/* ---------- 서명 ---------- */
+let sctx, drawing = false, signInk = false;
+function initSign(){
+  const cv = $("signCanvas"); sctx = cv.getContext("2d");
+  sctx.lineWidth = 4.5; sctx.lineCap = "round"; sctx.lineJoin = "round"; sctx.strokeStyle = "#111";
+  const pos = (ev) => { const r = cv.getBoundingClientRect(); return [(ev.clientX - r.left) * cv.width / r.width, (ev.clientY - r.top) * cv.height / r.height]; };
+  cv.addEventListener("pointerdown", (ev) => {
+    drawing = true; cv.setPointerCapture(ev.pointerId);
+    const [x, y] = pos(ev); sctx.beginPath(); sctx.moveTo(x, y); sctx.lineTo(x + 0.01, y); sctx.stroke();
+    signInk = true; $("signHint").style.display = "none";
+  });
+  cv.addEventListener("pointermove", (ev) => { if (!drawing) return; const [x, y] = pos(ev); sctx.lineTo(x, y); sctx.stroke(); });
+  const up = () => { drawing = false; };
+  cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
+  $("signClear").addEventListener("click", clearSign);
+}
+function clearSign(){ sctx.clearRect(0, 0, 600, 200); signInk = false; $("signHint").style.display = "flex"; }
+
+/* ---------- 제출 내역 (이 기기) ---------- */
+function loadHist(){ try{ return JSON.parse(localStorage.getItem(HIST_KEY) || "[]"); }catch(_){ return []; } }
+function saveHist(h){ try{ localStorage.setItem(HIST_KEY, JSON.stringify(h.slice(-20))); }catch(_){} }
+async function renderHist(){
+  const h = loadHist();
+  if (!h.length){ $("histCard").classList.add("hidden"); return; }
+  $("histCard").classList.remove("hidden");
+  const ST = { pending: "확인 대기", approved: "승인됨", rejected: "반려됨" };
+  const rows = await Promise.all(h.slice().reverse().map(async (it) => {
+    let st = "pending";
+    try{
+      const snap = await withTimeout(fs.getDoc(fs.doc(db, "reports", pub, "items", it.id)), 8000);
+      st = snap.exists() ? (snap.data().status || "pending") : "gone";
+    }catch(_){ st = "pending"; }
+    const label = st === "gone" ? "처리 완료" : ST[st] || "확인 대기";
+    const cls = st === "gone" ? "approved" : st;
+    const div = document.createElement("div"); div.className = "hist-item";
+    const m = document.createElement("div"); m.className = "m";
+    m.textContent = it.name + " · " + it.type + " · " + it.date.replace(/-/g, ".");
+    const small = document.createElement("small"); small.textContent = "제출 " + it.at; m.appendChild(small);
+    const s = document.createElement("span"); s.className = "st " + cls; s.textContent = label;
+    div.appendChild(m); div.appendChild(s);
+    return div;
+  }));
+  const list = $("histList"); list.innerHTML = ""; rows.forEach(r => list.appendChild(r));
+}
+
+/* ---------- 제출 ---------- */
+async function submit(e){
+  e.preventDefault();
+  if (busy || !eventData || eventData.mode !== "open") return;
+  const v = (id) => $(id).value.trim();
+  const p = {
+    name: v("f-name"), id: v("f-id"), dept: v("f-dept"), course: v("f-course"),
+    type: curType, date: $("f-date").value,
+    start: curType === "결석" ? "" : $("f-start").value,
+    end: curType === "결석" ? "" : $("f-end").value,
+    h: curType === "결석" ? "0" : String(Math.max(0, parseInt($("f-h").value, 10) || 0)),
+    m: curType === "결석" ? "0" : String(Math.min(59, Math.max(0, parseInt($("f-m").value, 10) || 0))),
+    reason: v("f-reason"), memo: v("f-memo"),
+    sign: null, submittedAt: new Date().toISOString(), v: 1
+  };
+  if (!p.name){ $("f-name").focus(); alert("성명을 입력해주세요."); return; }
+  if (!p.id){ $("f-id").focus(); alert("배움누리터 아이디를 입력해주세요."); return; }
+  if (!p.date){ $("f-date").focus(); alert("해당 일자를 선택해주세요."); return; }
+  if (!p.reason){ $("f-reason").focus(); alert("사유를 입력해주세요."); return; }
+  if (!signInk){ alert("서명을 해주세요."); return; }
+  p.sign = $("signCanvas").toDataURL("image/png");
+
+  busy = true;
+  const btn = $("submit"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+  document.activeElement && document.activeElement.blur();
+  try{
+    try{ localStorage.setItem(PROFILE_KEY, JSON.stringify({ name: p.name, id: p.id, dept: p.dept })); }catch(_){}
+    const enc = await encryptPayload(p);
+    const ref = await withTimeout(fs.addDoc(fs.collection(db, "reports", pub, "items"), {
+      ct: enc.ct, ek: enc.ek, iv: enc.iv, createdAt: fs.serverTimestamp(), status: "pending"
+    }), 15000);
+    const now = new Date();
+    const h = loadHist();
+    h.push({ id: ref.id, name: p.name, type: p.type, date: p.date,
+      at: (now.getMonth() + 1) + "." + now.getDate() + " " + String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0") });
+    saveHist(h);
+    showResult("ok", "신고서가 제출되었습니다", p.name + " · " + p.type + " · " + p.date.replace(/-/g, ".") + "\n담당자가 확인하면 아래 내역에 표시됩니다.");
+    renderHist();
+  }catch(err){
+    console.error(err);
+    const offline = (err && err.message === "timeout") || !navigator.onLine;
+    const denied = err && err.code === "permission-denied";
+    showResult("bad", offline ? "인터넷 연결을 확인해주세요" : denied ? "접수가 닫혀 있어요" : "제출하지 못했어요",
+      offline ? "연결이 불안정해요. 잠시 후 다시 시도해주세요.\n입력한 내용은 그대로 남아 있어요."
+              : denied ? "담당자가 접수를 마감했어요. 담당자에게 문의해주세요."
+                       : "잠시 후 다시 시도해주세요.\n계속 안 되면 담당자에게 말씀해주세요.");
+    $("back").textContent = "돌아가서 다시 시도";
+    $("back").dataset.keep = "1";
+  }finally{
+    busy = false;
+    renderMode();
+  }
+}
+function resetForm(){
+  $("f-date").value = today(); $("f-start").value = ""; $("f-end").value = "";
+  $("f-h").value = 0; $("f-m").value = 0; $("f-reason").value = ""; $("f-memo").value = "";
+  $("durNote").textContent = "시각을 모두 입력하면 자동으로 계산됩니다."; $("durNote").classList.remove("ok");
+  curType = "지각"; applyType(); clearSign();
+}
+$("back").addEventListener("click", () => {
+  if ($("back").dataset.keep !== "1") resetForm();
+  delete $("back").dataset.keep; $("back").textContent = "새 신고 작성";
+  $("resultCard").classList.add("hidden"); $("form").classList.remove("hidden");
+  window.scrollTo(0, 0);
+});
+
+/* ---------- 시작 ---------- */
+async function start(){
+  initSign(); applyType();
+  $("f-date").value = today();
+  $("form").addEventListener("submit", submit);
+  try{
+    const pr = JSON.parse(localStorage.getItem(PROFILE_KEY) || "null");
+    if (pr){ $("f-name").value = pr.name || ""; $("f-id").value = pr.id || ""; $("f-dept").value = pr.dept || ""; }
+  }catch(_){}
+
+  if (!/^[0-9a-f]{12}$/.test(pub)){ fatal("올바른 주소가 아니에요. QR을 다시 찍어주세요."); return; }
+  if (!window.crypto || !crypto.subtle){ fatal("이 브라우저에서는 사용할 수 없어요. 다른 브라우저로 열어주세요."); return; }
+
+  try{
+    const appM = await import(SDK + "firebase-app.js");
+    const authM = await import(SDK + "firebase-auth.js");
+    fs = await import(SDK + "firebase-firestore.js");
+    const app = appM.initializeApp(FIREBASE_CONFIG);
+    db = fs.getFirestore(app);
+    const auth = authM.getAuth(app);
+    const user = await new Promise((res) => { const un = authM.onAuthStateChanged(auth, (u) => { un(); res(u); }); });
+    if (!user) await authM.signInAnonymously(auth);
+
+    let first = true;
+    fs.onSnapshot(fs.doc(db, "reports", pub), async (d) => {
+      if (!d.exists()){ eventData = null; fatal("없거나 끝난 접수창구예요. 담당자에게 문의해주세요."); return; }
+      const data = d.data() || {};
+      if (!pubKey){
+        pubKey = await crypto.subtle.importKey("spki", unb64(data.pubKey), { name: "RSA-OAEP", hash: "SHA-256" }, false, ["encrypt"]);
+      }
+      eventData = data;
+      if (data.title){
+        $("evTitle").textContent = data.title;
+        if (first && !$("f-course").value) $("f-course").value = data.title;
+      }
+      first = false;
+      renderMode();
+    }, (err) => { console.error(err); fatal("연결하지 못했어요. 잠시 후 새로고침해주세요."); });
+    renderHist();
+  }catch(err){
+    console.error(err);
+    fatal("연결하지 못했어요. 인터넷 연결을 확인해주세요.");
+  }
+}
+start();
+</script>
+</body>
+</html>
